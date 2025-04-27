@@ -1,75 +1,87 @@
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_application_1/pages/base.dart';
-import 'package:flutter_application_1/pages/knowledge_implementation.dart';
+import 'dart:io'; // Provides access to file operations for loading images
+import 'package:flutter/material.dart'; // Core Flutter UI framework
+import 'package:google_fonts/google_fonts.dart'; // Package for custom fonts
+import 'package:flutter_application_1/pages/base.dart'; // Base widget for consistent app layout
+import 'package:flutter_application_1/pages/knowledge_implementation.dart'; // Backend rule system
 
+// StatefulWidget is used when the UI can change dynamically during runtime
 class ChatbotRedo extends StatefulWidget {
-  final String initialCategory;
-  final String? initialImagePath;
-  final List<String> initialDetections;
-  final Map<String, Map<String, String>> initialComponentImages;
-  final List<int> initialBatch;
+  // These are parameters passed when creating the widget
+  final String initialCategory; // Device category (e.g., "Laptop")
+  final String? initialImagePath; // Optional main image path
+  final List<String> initialDetections; // List of detected components
+  final Map<String, Map<String, String>> initialComponentImages; // Nested map of image paths for components
+  final List<int> initialBatch; // Batch identifier for processing
 
+  // Constructor with required and optional parameters
   const ChatbotRedo({
-    super.key,
-    required this.initialCategory,
-    this.initialImagePath,
+    super.key, // Widget key for Flutter's internal use
+    required this.initialCategory, 
+    this.initialImagePath, // Optional parameter (can be null)
     required this.initialDetections,
     required this.initialComponentImages,
     required this.initialBatch,
   });
 
+  // Creates the mutable state object for this widget
   @override
   State<ChatbotRedo> createState() => _ChatbotRedoState();
 }
 
+// The mutable state class that contains all the dynamic logic and UI
 class _ChatbotRedoState extends State<ChatbotRedo> {
-  bool _isSummaryExpanded = false; // Collapsed by default as requested
-  RuleBase? _ruleBase; // Store the loaded rule base
-  Node? _currentNode; // Current instruction node
-  bool _isLoading = true; // Track if the rule base is still loading
+  // UI state variables
+  bool _isSummaryExpanded = false; // Controls if the top summary section is expanded
   
-  // New variables for component tracking
-  String? _currentComponent; // Currently selected component
-  Map<String, dynamic>? _componentMapping; // Map of issue types to components
-  List<String>? _componentOrder; // Order of components from JSON
-  Map<String, String>? _componentStartNodes; // Start nodes for each component
+  // Rule system variables
+  RuleBase? _ruleBase; // Contains all the decision nodes and rules
+  Node? _currentNode; // Current instruction/question node being displayed
+  bool _isLoading = true; // Loading indicator control
   
-  // Store all component image paths for quick access
-  Map<String, String> _componentImagePaths = {};
-  Map<String, String>? _componentLabelMapping; // Component label mapping
+  // Component tracking variables
+  String? _currentComponent; // Currently selected component (e.g., "ram")
+  Map<String, dynamic>? _componentMapping; // Maps issue types to components
+  List<String>? _componentOrder; // Order of components from configuration
+  Map<String, String>? _componentStartNodes; // Maps component names to their starting node IDs
+  
+  // Image handling
+  Map<String, String> _componentImagePaths = {}; // Quick lookup for component images
+  Map<String, String>? _componentLabelMapping; // Maps UI labels to component internal names
 
+  // Lifecycle method called when widget is first created
   @override
   void initState() {
-    super.initState();
-    _loadRuleBase();
-    _initializeComponentImagePaths();
+    super.initState(); // Always call parent method first
+    _loadRuleBase(); // Load the decision tree rules
+    _initializeComponentImagePaths(); // Setup quick access to images
   }
 
-  // Initialize the component image paths map for quick access
+  // Creates a flattened map for quick component image lookup
   void _initializeComponentImagePaths() {
-    // Create a flattened map of component name -> image path
+    // Loop through the nested structure of images passed to this widget
     for (var entry in widget.initialComponentImages.entries) {
       for (var component in entry.value.entries) {
-        // Extract base component name (remove any suffixes)
+        // Extract base component name by removing suffixes and normalizing case
         final baseComponentName = component.key.split('_')[0].toLowerCase();
         _componentImagePaths[baseComponentName] = component.value;
       }
     }
     
-    print("Component image paths: $_componentImagePaths");
+    print("Component image paths: $_componentImagePaths"); // Debug output
   }
 
+  // Asynchronously loads the rule system from a JSON file
   Future<void> _loadRuleBase() async {
     try {
       print("Loading rule base for category: ${widget.initialCategory}");
       
+      // KnowledgeImplementation handles loading JSON data and parsing it
       final ruleBase = await KnowledgeImplementation.loadRuleBase(widget.initialCategory);
       
-      // Parse additional JSON structure (component mapping, order, etc.)
+      // Extract additional configuration from the rule base
       _parseAdditionalRuleBaseStructure(ruleBase);
       
+      // Debug output 
       print("Rule base loaded: ${ruleBase.nodes.length} nodes");
       if (ruleBase.startNode != null) {
         print("Start node found: ${ruleBase.startNode!.id}");
@@ -77,41 +89,44 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
         print("ERROR: Start node not found!");
       }
       
+      // Update UI state - triggers a rebuild of the widget
       setState(() {
         _ruleBase = ruleBase;
-        _currentNode = ruleBase.startNode;
-        _isLoading = false;
+        _currentNode = ruleBase.startNode; // Start from the first node
+        _isLoading = false; // Stop showing loading indicator
       });
     } catch (e) {
       print("Error loading rule base: $e");
       setState(() {
-        _isLoading = false;
+        _isLoading = false; // Stop loading indicator even on error
       });
     }
   }
 
-  // Parse additional structure from the rule base JSON
+  // Extracts additional configuration from the JSON data
   void _parseAdditionalRuleBaseStructure(RuleBase ruleBase) {
-    // Access the raw JSON data to get additional structures
+    // Get the raw JSON data (before it was converted to RuleBase)
     final rawData = KnowledgeImplementation.getRawJsonData(widget.initialCategory);
     if (rawData != null) {
+      // Extract various configuration maps from the JSON
       _componentMapping = rawData['component_mapping'];
       
-      // Parse component order
+      // Parse component ordering (if available)
       if (rawData.containsKey('component_order')) {
         _componentOrder = List<String>.from(rawData['component_order']);
       }
       
-      // Parse component start nodes
+      // Parse component starting nodes (if available)
       if (rawData.containsKey('component_start_nodes')) {
         _componentStartNodes = Map<String, String>.from(rawData['component_start_nodes']);
       }
       
-      // Parse component label mapping
+      // Parse component label mappings (if available)
       if (rawData.containsKey('component_labels')) {
         _componentLabelMapping = Map<String, String>.from(rawData['component_labels']);
       }
       
+      // Debug output
       print("Component mapping: $_componentMapping");
       print("Component order: $_componentOrder");
       print("Component start nodes: $_componentStartNodes");
@@ -119,23 +134,25 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     }
   }
   
-  // Updated to properly handle next_component field
+  // Handles navigation between nodes in the decision tree
   void _navigateToNode(String nodeIdOrComponent) {
-    if (_ruleBase == null) return;
+    if (_ruleBase == null) return; // Safety check
     
-    // If this is a next_component (just component name), find the proper node ID
+    // Handle both direct node IDs and component names
     String nodeId = nodeIdOrComponent;
     if (_componentStartNodes != null && _componentStartNodes!.containsKey(nodeIdOrComponent)) {
-      // Look up the actual node ID for this component from component_start_nodes
+      // If this is a component name, look up its starting node ID
       nodeId = _componentStartNodes![nodeIdOrComponent]!;
       print("Translating component '$nodeIdOrComponent' to node ID: '$nodeId'");
     }
     
+    // Find the node in the rule base
     final node = _ruleBase!.findNodeById(nodeId);
     if (node != null) {
-      // Check if we're navigating to a component-specific node
+      // Update current component tracking based on node ID
       _updateCurrentComponentFromNodeId(nodeId);
       
+      // Update UI with the new node
       setState(() {
         _currentNode = node;
       });
@@ -144,10 +161,9 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     }
   }
   
-  // Update the _updateCurrentComponentFromNodeId method:
-
+  // Updates the current component tracking based on node ID conventions
   void _updateCurrentComponentFromNodeId(String nodeId) {
-    // Check if we're navigating to a component extraction node
+    // Check for extraction nodes (by convention they start with 'extract_')
     if (nodeId.startsWith('extract_')) {
       final componentName = nodeId.substring('extract_'.length);
       setState(() {
@@ -155,7 +171,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
       });
       print("Now working on component: $_currentComponent");
     } 
-    // Check if we're navigating to a component issue node
+    // Check component mapping for issue nodes
     else if (_componentMapping != null) {
       _componentMapping!.forEach((issue, components) {
         if (nodeId == issue) {
@@ -165,13 +181,12 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
             });
             print("Selected component issue: $_currentComponent");
           } 
-          // If multiple components are possible for this issue, don't set current component yet
+          // Multiple components case - don't set a specific component
         }
       });
     }
     
-    // IMPORTANT: Reset component when navigating to selection screens
-    // Add these conditions to clear the current component
+    // Reset component tracking when at selection screens
     if (nodeId == 'end' || 
         nodeId == 'start' || 
         nodeId == 'component_extraction' || 
@@ -183,24 +198,27 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     }
   }
   
-  // Get component image for the current component
+  // Helper to get the current component's image path
   String? _getCurrentComponentImagePath() {
     if (_currentComponent == null) return null;
     return _componentImagePaths[_currentComponent];
   }
 
+  // Shows a full-screen image overlay when an image is tapped
   void _showImageOverlay(BuildContext context, String imagePath) {
     showDialog(
-      context: context,
+      context: context, // Current build context
       builder: (BuildContext context) {
+        // Create a custom dialog for the image
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(8),
           child: Stack(
             alignment: Alignment.center,
             children: [
+              // Semi-transparent background that dismisses on tap
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => Navigator.pop(context), // Close dialog on tap
                 child: Container(
                   color: Colors.black87,
                   width: double.infinity,
@@ -210,6 +228,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Image with pinch zoom capability
                   Flexible(
                     child: Container(
                       constraints: BoxConstraints(
@@ -218,7 +237,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                       ),
                       child: InteractiveViewer(
                         minScale: 0.5,
-                        maxScale: 4.0,
+                        maxScale: 4.0, // Allow zooming in up to 4x
                         child: Image.file(
                           File(imagePath),
                           fit: BoxFit.contain,
@@ -227,6 +246,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Close button
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white, size: 30),
                     onPressed: () => Navigator.pop(context),
@@ -240,21 +260,22 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     );
   }
 
+  // Main build method for the widget UI
   @override
   Widget build(BuildContext context) {
     return Base(
-      title: 'Extraction Assistant',
+      title: 'Extraction Assistant', // Page title
       child: Column(
         children: [
-          // Collapsible Device Category and Components Section
+          // Top collapsible summary section (green header)
           AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            color: const Color(0xFF34A853),
+            duration: const Duration(milliseconds: 300), // Animation duration when expanding/collapsing
+            color: const Color(0xFF34A853), // Green color
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header row with Title and Toggle button
+                // Header row with title and toggle button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -265,6 +286,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                         color: Colors.white70,
                       ),
                     ),
+                    // Toggle button for expanding/collapsing
                     IconButton(
                       icon: Icon(
                         _isSummaryExpanded 
@@ -273,6 +295,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                         color: Colors.white,
                       ),
                       onPressed: () {
+                        // Update UI state when pressed
                         setState(() {
                           _isSummaryExpanded = !_isSummaryExpanded;
                         });
@@ -281,7 +304,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                   ],
                 ),
                 
-                // Device category value
+                // Device category display (e.g., "Laptop")
                 Text(
                   widget.initialCategory,
                   style: GoogleFonts.montserrat(
@@ -291,25 +314,26 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                   ),
                 ),
                 
-                // Component chips
+                // Component chips (small buttons) for each detected component
                 if (widget.initialDetections.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 12, bottom: 8),
-                    child: Wrap(
+                    child: Wrap( // Wrap automatically handles wrapping to next line
                       spacing: 8,
                       runSpacing: 8,
                       children: _getUniqueComponents().map((component) {
-                        // Get component name without suffixes
+                        // Process component name for display
                         final displayName = component.split('_')[0];
                         final baseComponent = displayName.toLowerCase();
                         
-                        // Highlight the current component
+                        // Check if this is the currently selected component
                         final isCurrentComponent = _currentComponent != null && 
                             baseComponent == _currentComponent!.toLowerCase();
                         
-                        // Create icon based on component type
+                        // Get appropriate icon for this component type
                         IconData iconData = _getIconForComponent(baseComponent);
                         
+                        // Build chip UI
                         return Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -317,8 +341,8 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                           ),
                           decoration: BoxDecoration(
                             color: isCurrentComponent 
-                                ? Colors.white 
-                                : Colors.white10,
+                                ? Colors.white  // White background for selected
+                                : Colors.white10, // Translucent for others
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isCurrentComponent 
@@ -332,7 +356,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                               Icon(
                                 iconData,
                                 color: isCurrentComponent 
-                                    ? const Color(0xFF34A853) 
+                                    ? const Color(0xFF34A853) // Green for selected
                                     : Colors.white,
                                 size: 18,
                               ),
@@ -353,9 +377,9 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     ),
                   ),
                 
-                // Only show these sections when expanded
+                // Additional sections only shown when expanded
                 if (_isSummaryExpanded && widget.initialComponentImages.isNotEmpty) ...[
-                  // Input Images Section
+                  // Input Images Section - shows original device photos
                   const SizedBox(height: 16),
                   Text(
                     'Input Images',
@@ -366,16 +390,17 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  // Horizontal scrolling list of images
                   SizedBox(
                     height: 120,
                     child: ListView(
-                      scrollDirection: Axis.horizontal,
+                      scrollDirection: Axis.horizontal, // Horizontal scrolling
                       children: [
                         for (var imagePath in widget.initialComponentImages.keys)
                           Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: GestureDetector(
-                              onTap: () => _showImageOverlay(context, imagePath),
+                              onTap: () => _showImageOverlay(context, imagePath), // Show fullscreen on tap
                               child: Container(
                                 decoration: BoxDecoration(
                                   border: Border.all(color: Colors.white30),
@@ -396,7 +421,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     ),
                   ),
                   
-                  // Detected Components Section
+                  // Detected Components Section - cropped component images
                   const SizedBox(height: 16),
                   Text(
                     'Detected Components',
@@ -407,12 +432,13 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Horizontal scrolling list of detected component images
+                  // Horizontal scrolling grid of component images
                   SizedBox(
                     height: 140,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
+                        // Nested loops to get all component images
                         for (var entry in widget.initialComponentImages.entries)
                           for (var componentEntry in entry.value.entries)
                             Padding(
@@ -421,6 +447,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                                 onTap: () => _showImageOverlay(context, componentEntry.value),
                                 child: Container(
                                   width: 120,
+                                  // Highlight the current component
                                   decoration: BoxDecoration(
                                     color: _isCurrentComponentImage(componentEntry.key) 
                                         ? Colors.white 
@@ -430,6 +457,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
+                                      // Component image thumbnail
                                       Expanded(
                                         child: ClipRRect(
                                           borderRadius: const BorderRadius.vertical(
@@ -441,6 +469,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                                           ),
                                         ),
                                       ),
+                                      // Component name label
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 8,
@@ -473,10 +502,11 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
             ),
           ),
           
-          // Instructions Section
+          // Main instructions section (white area)
           Expanded(
             child: Container(
               color: Colors.white,
+              // Show loading indicator or instructions based on state
               child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF34A853)))
                 : _buildInstructionsContent(),
@@ -487,47 +517,48 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     );
   }
   
-  // Check if this image corresponds to the current component
+  // Check if a component image belongs to the current component
   bool _isCurrentComponentImage(String componentKey) {
     if (_currentComponent == null) return false;
+    // Check if this image key starts with the current component name
     return componentKey.toLowerCase().startsWith(_currentComponent!.toLowerCase());
   }
   
-  // Get icon for a component type
+  // Maps component types to appropriate Material Icons
   IconData _getIconForComponent(String component) {
     switch (component.toLowerCase()) {
       case 'ram':
-        return Icons.memory;
+        return Icons.memory; // Memory stick icon
       case 'battery':
       case 'cmos':
-        return Icons.battery_full;
+        return Icons.battery_full; // Battery icon
       case 'fan':
       case 'cooler':
-        return Icons.air;
+        return Icons.air; // Fan/air icon
       case 'wifi':
       case 'card':
-        return Icons.wifi;
+        return Icons.wifi; // WiFi icon
       case 'drive':
       case 'hdd':
       case 'ssd':
       case 'disk':
-        return Icons.storage;
+        return Icons.storage; // Storage icon
       case 'cpu':
-        return Icons.developer_board;
+        return Icons.developer_board; // Circuit board icon
       case 'gpu':
-        return Icons.videogame_asset;
+        return Icons.videogame_asset; // Graphics/gaming icon
       case 'psu':
-        return Icons.power;
+        return Icons.power; // Power icon
       case 'mboard':
-        return Icons.dashboard;
+        return Icons.dashboard; // Dashboard icon for motherboard
       case 'case':
-        return Icons.computer;
+        return Icons.computer; // Computer case icon
       default:
-        return Icons.memory;
+        return Icons.memory; // Default fallback icon
     }
   }
 
-  // Build the instructions content based on the current node
+  // Builds the main instruction content based on current node
   Widget _buildInstructionsContent() {
     if (_currentNode == null) {
       return const Center(
@@ -535,14 +566,16 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
       );
     }
     
+    // Get image for current component if available
     final componentImagePath = _getCurrentComponentImagePath();
     
+    // Main instructions UI structure
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Component name at top
+          // Component title at top if we're on a component-specific node
           if (_currentComponent != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -556,7 +589,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
               ),
             ),
           
-          // Instructions label row
+          // Instructions header with icon
           Row(
             children: [
               Icon(
@@ -578,7 +611,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
           
           const SizedBox(height: 16),
           
-          // Component image if available
+          // Component image if available for this step
           if (componentImagePath != null) ...[
             GestureDetector(
               onTap: () => _showImageOverlay(context, componentImagePath),
@@ -601,7 +634,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
             const SizedBox(height: 16),
           ],
           
-          // Node text (question or instruction)
+          // Node text - could be a question or instruction headline
           if (_currentNode!.text != null)
             Text(
               _currentNode!.text!,
@@ -613,16 +646,17 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
           
           const SizedBox(height: 24),
           
+          // Scrollable area for steps and options (allows for overflow content)
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // IMPORTANT: Show steps FIRST
+                  // Step-by-step instructions (if this node has steps)
                   if (_currentNode!.isStepNode) ...[
                     ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true, // Important for nested scrolling
+                      physics: NeverScrollableScrollPhysics(), // Disable scrolling of inner list
                       itemCount: _currentNode!.steps.length,
                       itemBuilder: (context, index) {
                         final step = _currentNode!.steps[index];
@@ -631,6 +665,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Step number circle
                               Container(
                                 width: 28,
                                 height: 28,
@@ -649,6 +684,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                                 ),
                               ),
                               const SizedBox(width: 12),
+                              // Step instruction text
                               Expanded(
                                 child: Text(
                                   step.action,
@@ -666,9 +702,10 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     const SizedBox(height: 24),
                   ],
 
-                  // THEN show options after steps (if we have any)
+                  // Options/answers for questions (if this node has options)
                   if (_currentNode!.isQuestionNode) ...[
-                    if (!_currentNode!.isStepNode) // Only show this label if there are no steps
+                    // Only show label if there are no steps (avoids redundancy)
+                    if (!_currentNode!.isStepNode) 
                       Text(
                         'Select an option:',
                         style: GoogleFonts.montserrat(
@@ -680,14 +717,14 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
                     if (!_currentNode!.isStepNode)  
                       const SizedBox(height: 16),
                     
-                    // Options below steps
+                    // Generate buttons for each option
                     ..._getFilteredOptions().map((option) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () => _navigateToNode(option.next),
+                            onPressed: () => _navigateToNode(option.next), // Navigate on press
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF34A853),
                               foregroundColor: Colors.white,
@@ -713,7 +750,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
             ),
           ),
           
-          // Next button for step nodes (keep at bottom)
+          // Next button for step nodes (at bottom of screen)
           if (_currentNode!.isStepNode && _currentNode!.next != null)
             Padding(
               padding: const EdgeInsets.only(top: 16),
@@ -744,23 +781,23 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     );
   }
 
-  // Helper method to format component names
+  // Helper to capitalize first letter of component names
   String _formatComponentName(String name) {
     return name[0].toUpperCase() + name.substring(1);
   }
 
-  // Helper method to get unique component names
+  // Helper to get unique component names from detected components
   List<String> _getUniqueComponents() {
     return widget.initialDetections.toSet().toList();
   }
 
-  // Add this method to filter options based on detected components
+  // Filters options shown based on detected components
   List<Option> _getFilteredOptions() {
     if (_currentNode == null || !_currentNode!.isQuestionNode) {
       return [];
     }
     
-    // For the component extraction screen, only show detected components
+    // Special handling for component extraction screen - only show detected components
     if (_currentNode!.id == "component_extraction") {
       return _currentNode!.options.where((option) {
         // Always include navigation options like "Back" or "End"
@@ -771,20 +808,20 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
         // Convert option label to component name for comparison
         String componentName = _getComponentNameFromLabel(option.label).toLowerCase();
         
-        // Check if this component was detected
+        // Only include options for components that were detected
         return widget.initialDetections.any((detection) {
           return detection.toLowerCase().startsWith(componentName);
         });
       }).toList();
     }
     
-    // For other screens, show all options
+    // For other screens, show all available options
     return _currentNode!.options;
   }
 
-  // Helper method to extract component name from option label
+  // Helper to extract a component name from a UI option label
   String _getComponentNameFromLabel(String label) {
-    // If we have a mapping from the JSON, use it
+    // If we have a mapping from the JSON configuration, use it
     if (_componentLabelMapping != null) {
       // Try exact match first
       if (_componentLabelMapping!.containsKey(label)) {
@@ -799,7 +836,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
       }
     }
     
-    // Default: extract the first word and convert to lowercase
+    // Default fallback: extract the first word and convert to lowercase
     return label.split(' ')[0].toLowerCase();
   }
 }
