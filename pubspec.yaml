@@ -1,0 +1,36 @@
+name: flutter_application_1
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  image_picker: ^1.0.5  # For picking images from gallery or camera
+  tflite_flutter: ^0.11.0  # For TensorFlow Lite model inference
+  image: ^4.1.3
+  path_provider: ^2.1.1  # For file paths
+  path: ^1.8.3  # For path manipulation
+  google_fonts: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/desktop_instructions.json
+    - assets/models/laptop/best_laptop_float16.tflite
+    - assets/models/laptop/labels.txt
+    - assets/models/computer/best_computer_float16.tflite
+    - assets/models/computer/labels.txt
+    - assets/models/smartphone/best_phone_float16.tflite
+    - assets/models/smartphone/labels.txt
+    - assets/models/telecom/best_router_float16.tflite
+    - assets/models/telecom/labels.txt
