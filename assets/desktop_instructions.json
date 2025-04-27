@@ -36,7 +36,7 @@
         { "label": "Cooling or fan", "next": "cooling_issue" },
         { "label": "CPU", "next": "extract_cpu" },
         { "label": "Graphics card (GPU)", "next": "extract_gpu" },
-        { "label": "Motherboard", "next": "extract_psu" },
+        { "label": "Motherboard", "next": "extract_mboard" },
         { "label": "Powersupply", "next": "extract_psu" },
         { "label": "RAM", "next": "extract_ram" },
         { "label": "Back", "next": "start" },
@@ -248,5 +248,23 @@
       "id": "end",
       "text": "All selected components have been processed."
     }
-  ]
+  ],
+
+  "component_labels": {
+    "Graphics card": "gpu",
+    "GPU": "gpu",
+    "Cooling": "cooler",
+    "fan": "cooler",
+    "HDD": "hdd",
+    "SSD": "ssd",
+    "Power supply": "psu",
+    "PSU": "psu",
+    "Motherboard": "mboard",
+    "RAM": "ram",
+    "Memory": "ram",
+    "CPU": "cpu",
+    "BIOS": "cmos",
+    "CMOS": "cmos",
+    "Case": "case"
+  }
 }

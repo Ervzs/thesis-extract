@@ -38,6 +38,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
   
   // Store all component image paths for quick access
   Map<String, String> _componentImagePaths = {};
+  Map<String, String>? _componentLabelMapping; // Component label mapping
 
   @override
   void initState() {
@@ -92,7 +93,7 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
   // Parse additional structure from the rule base JSON
   void _parseAdditionalRuleBaseStructure(RuleBase ruleBase) {
     // Access the raw JSON data to get additional structures
-    final rawData = KnowledgeImplementation.getRawJsonData();
+    final rawData = KnowledgeImplementation.getRawJsonData(widget.initialCategory);
     if (rawData != null) {
       _componentMapping = rawData['component_mapping'];
       
@@ -106,9 +107,15 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
         _componentStartNodes = Map<String, String>.from(rawData['component_start_nodes']);
       }
       
+      // Parse component label mapping
+      if (rawData.containsKey('component_labels')) {
+        _componentLabelMapping = Map<String, String>.from(rawData['component_labels']);
+      }
+      
       print("Component mapping: $_componentMapping");
       print("Component order: $_componentOrder");
       print("Component start nodes: $_componentStartNodes");
+      print("Component label mapping: $_componentLabelMapping");
     }
   }
   
@@ -777,27 +784,19 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
 
   // Helper method to extract component name from option label
   String _getComponentNameFromLabel(String label) {
-    // Handle special cases
-    if (label.contains("Graphics card") || label.contains("GPU")) {
-      return "gpu";
-    } else if (label.contains("Cooling") || label.contains("fan")) {
-      return "cooler";
-    } else if (label.contains("HDD")) {
-      return "hdd";
-    } else if (label.contains("SSD")) {
-      return "ssd";
-    } else if (label.contains("Power") || label.contains("PSU")) {
-      return "psu";
-    } else if (label.contains("Motherboard")) {
-      return "mboard";
-    } else if (label.contains("RAM") || label.contains("Memory")) {
-      return "ram";
-    } else if (label.contains("CPU")) {
-      return "cpu";
-    } else if (label.contains("BIOS") || label.contains("CMOS")) {
-      return "cmos";
-    } else if (label.contains("Case")) {
-      return "case";
+    // If we have a mapping from the JSON, use it
+    if (_componentLabelMapping != null) {
+      // Try exact match first
+      if (_componentLabelMapping!.containsKey(label)) {
+        return _componentLabelMapping![label]!;
+      }
+      
+      // Then try partial matches
+      for (var entry in _componentLabelMapping!.entries) {
+        if (label.toLowerCase().contains(entry.key.toLowerCase())) {
+          return entry.value;
+        }
+      }
     }
     
     // Default: extract the first word and convert to lowercase
