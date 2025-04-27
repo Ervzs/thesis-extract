@@ -60,7 +60,7 @@ class Category extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 16), // Space before next button
+            const SizedBox(height: 0), // Space before next button
 
             // A full-width button for Landline Phone option
             SizedBox(

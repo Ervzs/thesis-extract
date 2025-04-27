@@ -26,6 +26,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/desktop_instructions.json
+    - assets/laptop_instructions.json
     - assets/models/laptop/best_laptop_float16.tflite
     - assets/models/laptop/labels.txt
     - assets/models/computer/best_computer_float16.tflite
