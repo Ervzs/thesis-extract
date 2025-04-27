@@ -61,13 +61,26 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     // Loop through the nested structure of images passed to this widget
     for (var entry in widget.initialComponentImages.entries) {
       for (var component in entry.value.entries) {
-        // Extract base component name by removing suffixes and normalizing case
-        final baseComponentName = component.key.split('_')[0].toLowerCase();
-        _componentImagePaths[baseComponentName] = component.value;
+        // Store the component image with original key to preserve uniqueness
+        _componentImagePaths[component.key.toLowerCase()] = component.value;
       }
     }
     
     print("Component image paths: $_componentImagePaths"); // Debug output
+  }
+  
+  // Helper to get all image paths for the current component
+  List<String> _getCurrentComponentImagePaths() {
+    if (_currentComponent == null) return [];
+    
+    // Find all images where the key starts with the current component name
+    List<String> paths = [];
+    for (var entry in _componentImagePaths.entries) {
+      if (entry.key.toLowerCase().startsWith(_currentComponent!.toLowerCase())) {
+        paths.add(entry.value);
+      }
+    }
+    return paths;
   }
 
   // Asynchronously loads the rule system from a JSON file
@@ -566,8 +579,8 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
       );
     }
     
-    // Get image for current component if available
-    final componentImagePath = _getCurrentComponentImagePath();
+    // Get all images for current component
+    final componentImagePaths = _getCurrentComponentImagePaths();
     
     // Main instructions UI structure
     return Padding(
@@ -611,24 +624,35 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
           
           const SizedBox(height: 16),
           
-          // Component image if available for this step
-          if (componentImagePath != null) ...[
-            GestureDetector(
-              onTap: () => _showImageOverlay(context, componentImagePath),
-              child: Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(componentImagePath),
-                    fit: BoxFit.contain,
-                  ),
-                ),
+          // Component images if available for this step
+          if (componentImagePaths.isNotEmpty) ...[
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: componentImagePaths.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: index < componentImagePaths.length - 1 ? 8 : 0),
+                    child: GestureDetector(
+                      onTap: () => _showImageOverlay(context, componentImagePaths[index]),
+                      child: Container(
+                        width: 120,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(componentImagePaths[index]),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 16),
