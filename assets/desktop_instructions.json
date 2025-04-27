@@ -6,7 +6,6 @@
       "options": [
         { "label": "Issues of my device", "next": "issue" },
         { "label": "Component Extraction", "next": "component_extraction" }
-        
       ]
     },
     {
@@ -38,7 +37,9 @@
         { "label": "Graphics card (GPU)", "next": "extract_gpu" },
         { "label": "Motherboard", "next": "extract_mboard" },
         { "label": "Powersupply", "next": "extract_psu" },
+        { "label": "Power supply (PSU)", "next": "extract_psu" },
         { "label": "RAM", "next": "extract_ram" },
+        { "label": "CMOS", "next": "extract_cmos" },  
         { "label": "Back", "next": "start" },
         { "label": "End", "next": "end" }
       ]
