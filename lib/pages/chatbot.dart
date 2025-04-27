@@ -211,11 +211,6 @@ class _ChatbotRedoState extends State<ChatbotRedo> {
     }
   }
   
-  // Helper to get the current component's image path
-  String? _getCurrentComponentImagePath() {
-    if (_currentComponent == null) return null;
-    return _componentImagePaths[_currentComponent];
-  }
 
   // Shows a full-screen image overlay when an image is tapped
   void _showImageOverlay(BuildContext context, String imagePath) {
