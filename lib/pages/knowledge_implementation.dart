@@ -1,5 +1,5 @@
-import 'dart:convert'; // Provides JSON encoding/decoding functionality
-import 'package:flutter/services.dart'; // Gives access to Flutter's asset system
+import 'dart:convert';
+import 'package:flutter/services.dart'; 
 
 /// Class to load and handle rule-based knowledge from JSON files
 class KnowledgeImplementation {

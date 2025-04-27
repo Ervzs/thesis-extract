@@ -1,134 +1,206 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/category.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-// A widget called HomePage that doesn't change (stateless).
 class HomePage extends StatelessWidget {
-  // Constructor for HomePage, marked as constant for performance optimization. `super.key` passes the key to the parent class.
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold provides the basic visual structure of the screen (app bar, body, floating buttons, etc.)
+    // Get the screen dimensions for responsive layout
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
-
-      // SafeArea keeps content away from system UI like notches, status bars, and curved edges.
+      backgroundColor: const Color(0xFF1E1E1E),
       body: SafeArea(
-        // Padding adds space around the entire body content — 24 pixels on the sides, 40 on top and bottom.
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      ShaderMask(
+                        shaderCallback:
+                            (bounds) => const LinearGradient(
+                              colors: [Colors.greenAccent, Colors.green],
+                            ).createShader(bounds),
+                        child: Text(
+                          'e-Xtract',
+                          style: GoogleFonts.montserrat(
+                            fontSize: screenHeight * 0.07, // Responsive font size
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
+                      Text(
+                        'Identify and extract valuable components in your e-waste instantly.',
+                        style: GoogleFonts.montserrat(
+                          fontSize: screenHeight * 0.022, // Responsive font size
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white70,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      SizedBox(
+                        height: screenHeight * 0.35, // Responsive height
+                        child: PageView(
+                          children: [
+                            _buildSlide(
+                              context: context,
+                              icon: Icons.document_scanner_rounded,
+                              title: 'Scan',
+                              subtitle: 'Analyze e-waste using your camera',
+                            ),
+                            _buildSlide(
+                              context: context,
+                              icon: Icons.precision_manufacturing_rounded,
+                              title: 'Extract',
+                              subtitle: 'Identify components for recovery',
+                            ),
+                            _buildSlide(
+                              context: context,
+                              icon: Icons.attach_money_rounded,
+                              title: 'Profit',
+                              subtitle: 'Discover the value of recovered parts',
+                            ),
+                            _buildSlide(
+                              context: context,
+                              icon: Icons.chat_bubble_outline,
+                              title: 'Get Help',
+                              subtitle: 'Chat with our AI assistant',
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
 
-          // Column arranges child widgets vertically, from top to bottom.
-          child: Column(
-            // Space the top and bottom sections as far apart as possible.
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // Get Started button
+                      _buildButton(
+                        context: context,
+                        text: 'Get Started',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Category(),
+                            ),
+                          );
+                        },
+                      ),
 
-            // Children are all the widgets that appear inside this vertical Column.
-            children: [
-              // Another Column to group top content together vertically.
-              Column(
-                children: [
-                  // Title text widget showing the app name "e-Xtract".
-                  const Text(
-                    'e-Xtract',
-                    style: TextStyle(
-                      fontSize: 40.0, 
-                      fontWeight: FontWeight.bold, // Bold font
-                      color: Color(0xFF4CD97B), 
-                    ),
-                  ),
-
-                  // Adds space (16 pixels) below the title text.
-                  const SizedBox(height: 16),
-
-                  
-                  const Text(
-                    'Identify and extract valuable components in your e-waste instantly.',
-                    textAlign: TextAlign.center, 
-                    style: TextStyle(
-                      fontSize: 16.0, 
-                      color: Colors.white70, 
-                      height: 1.5, // Line height between lines of text
-                    ),
-                  ),
-
-                  // Adds space (60 pixels) below the description.
-                  const SizedBox(height: 60.0),
-
-                  // A circular container for the scan icon.
-                  Container(
-                    width: 80, 
-                    height: 80, 
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800], // Dark grey background
-                      borderRadius: BorderRadius.circular(40), // Makes it circular (half of 80)
-                    ),
-                    // Icon inside the container, represents scanning.
-                    child: const Icon(
-                      Icons.document_scanner_outlined, // Scan icon
-                      size: 40, // Size of the icon
-                      color: Colors.white, // White icon color
-                    ),
-                  ),
-
-                  // Adds space below the scan icon.
-                  const SizedBox(height: 20.0),
-
-                  // Text label "Scan" below the icon.
-                  const Text(
-                    'Scan',
-                    style: TextStyle(
-                      fontSize: 28.0, 
-                      fontWeight: FontWeight.bold, 
-                      color: Colors.white, 
-                    ),
-                  ),
-
-                  // Adds space below the "Scan" label.
-                  const SizedBox(height: 8.0),
-
-                  
-                  const Text(
-                    'Analyze e-waste using your camera',
-                    style: TextStyle(
-                      fontSize: 14.0, 
-                      color: Colors.white70, 
-                    ),
-                  ),
-                ],
-              ),
-
-              // A button that the user can press to get started and proceed to category.dart page.
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Category()),
-                  );
-                },
-
-                // Styling the button using a custom green background, full width, and rounded corners
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CD97B), // Green background color
-                  minimumSize: const Size(double.infinity, 56), // Full width, fixed height
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30), // Rounded corners
-                  ),
-                ),
-
-                // Text inside the button
-                child: const Text(
-                  'Get Started',
-                  style: TextStyle(
-                    fontSize: 18.0, 
-                    fontWeight: FontWeight.bold, 
-                    color: Colors.white, 
+                      SizedBox(height: screenHeight * 0.015),
+                    ],
                   ),
                 ),
               ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
+  Widget _buildSlide({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          height: screenHeight * 0.12,
+          width: screenHeight * 0.12,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: const Offset(2, 4),
+              ),
             ],
           ),
+          child: Icon(icon, size: screenHeight * 0.07, color: Colors.white),
+        ),
+        SizedBox(height: screenHeight * 0.015),
+        Text(
+          title,
+          style: GoogleFonts.montserrat(
+            fontSize: screenHeight * 0.045,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        Text(
+          subtitle,
+          style: GoogleFonts.montserrat(
+            fontSize: screenHeight * 0.02,
+            color: Colors.white70,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildButton({
+    required BuildContext context,
+    required String text,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF34A853), Color(0xFF0F9D58)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              offset: const Offset(0, 4),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: screenHeight * 0.026, color: Colors.white),
+              SizedBox(width: screenHeight * 0.01),
+            ],
+            Text(
+              text,
+              style: GoogleFonts.montserrat(
+                fontSize: screenHeight * 0.022,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

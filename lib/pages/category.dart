@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; 
 import 'package:flutter_application_1/pages/upload.dart';
-import 'package:flutter_application_1/pages/base.dart'; // Import Base widget
+import 'package:flutter_application_1/pages/base.dart'; 
 
 
 class Category extends StatelessWidget {

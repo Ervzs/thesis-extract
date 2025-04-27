@@ -1,8 +1,8 @@
-import 'dart:io'; // Provides access to file operations for loading images
-import 'package:flutter/material.dart'; // Core Flutter UI framework
-import 'package:google_fonts/google_fonts.dart'; // Package for custom fonts
-import 'package:flutter_application_1/pages/base.dart'; // Base widget for consistent app layout
-import 'package:flutter_application_1/pages/knowledge_implementation.dart'; // Backend rule system
+import 'dart:io'; 
+import 'package:flutter/material.dart'; 
+import 'package:google_fonts/google_fonts.dart'; 
+import 'package:flutter_application_1/pages/base.dart'; 
+import 'package:flutter_application_1/pages/knowledge_implementation.dart';
 
 // StatefulWidget is used when the UI can change dynamically during runtime
 class ChatbotRedo extends StatefulWidget {
