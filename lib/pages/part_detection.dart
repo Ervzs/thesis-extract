@@ -8,7 +8,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_application_1/pages/chatbot.dart';
+import 'package:flutter_application_1/pages/assistant.dart';
 import 'package:flutter_application_1/pages/base.dart';
 
 // Define a stateful widget class for the Detection Page
