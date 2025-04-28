@@ -15,15 +15,15 @@ class Category extends StatelessWidget {
         padding: const EdgeInsets.all(24.0), // Add space around the content
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center, // Center content horizontally
-          children: [
+            children: [
             const Text(
               // Instructional text
               'Select a device type below to get started with part extraction and recycling instructions.',
               textAlign: TextAlign.center, // Center the text
               style: TextStyle(
-                fontSize: 16, // Font size
-                color: Colors.white70, // Light white text color
-                height: 1.5, // Line spacing
+              fontSize: 16, // Font size
+              color: Colors.white70, // Light white text color
+              height: 1.5, // Line spacing
               ),
             ),
             const SizedBox(height: 30), // Add vertical space
@@ -36,63 +36,70 @@ class Category extends StatelessWidget {
               crossAxisSpacing: 16, // Horizontal spacing
               mainAxisSpacing: 16, // Vertical spacing
               children: [
-                // Each box is created using a helper method
-                _buildDeviceCard(
-                  context: context,
-                  icon: Icons.smartphone, // Icon for smartphone
-                  label: 'Smartphone',
-                ),
-                _buildDeviceCard(
-                  context: context,
-                  icon: Icons.laptop, // Icon for laptop
-                  label: 'Laptop',
-                ),
-                _buildDeviceCard(
-                  context: context,
-                  icon: Icons.desktop_mac, // Icon for desktop
-                  label: 'Desktop',
-                ),
-                _buildDeviceCard(
-                  context: context,
-                  icon: Icons.router, // Icon for router
-                  label: 'Router',
-                ),
+              // Each box is created using a helper method
+              _buildDeviceCard(
+                context: context,
+                icon: Icons.smartphone, // Icon for smartphone
+                label: 'Smartphone',
+              ),
+              _buildDeviceCard(
+                context: context,
+                icon: Icons.laptop, // Icon for laptop
+                label: 'Laptop',
+              ),
+              _buildDeviceCard(
+                context: context,
+                icon: Icons.desktop_mac, // Icon for desktop
+                label: 'Desktop',
+              ),
+              _buildDeviceCard(
+                context: context,
+                icon: Icons.router, // Icon for router
+                label: 'Router',
+              ),
               ],
             ),
 
-            const SizedBox(height: 0), // Space before next button
+            const SizedBox(height: 16), // Space before next button
 
             // A full-width button for Landline Phone option
             SizedBox(
               width: double.infinity, // Make button take full width
               height: 80, // Button height
               child: ElevatedButton(
-                onPressed: () {}, // Action when button is pressed (currently empty)
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CD97B), // Green background color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20), // Rounded corners
+              onPressed: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UploadPage(category: 'Landline'),
+                ),
+                );
+              }, // Action when button is pressed
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4CD97B), // Green background color
+                shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20), // Rounded corners
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center, // Center items inside button
+                children: const [
+                Icon(
+                  Icons.call, // Icon for landline
+                  color: Colors.white, // Icon color
+                  size: 28, // Icon size
+                ),
+                SizedBox(width: 12), // Space between icon and text
+                Text(
+                  'Landline Phone', // Button label
+                  style: TextStyle(
+                  fontSize: 18, // Text size
+                  fontWeight: FontWeight.bold, // Bold text
+                  color: Colors.white, // White text color
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center, // Center items inside button
-                  children: const [
-                    Icon(
-                      Icons.call, // Icon for landline
-                      color: Colors.white, // Icon color
-                      size: 28, // Icon size
-                    ),
-                    SizedBox(width: 12), // Space between icon and text
-                    Text(
-                      'Landline Phone', // Button label
-                      style: TextStyle(
-                        fontSize: 18, // Text size
-                        fontWeight: FontWeight.bold, // Bold text
-                        color: Colors.white, // White text color
-                      ),
-                    ),
-                  ],
-                ),
+                ],
+              ),
               ),
             ),
           ],
@@ -120,7 +127,7 @@ class Category extends StatelessWidget {
               builder: (context) => UploadPage(category: label),
             ),
           );
-        }, // Action when card is tapped (currently empty)
+        }, 
         
         borderRadius: BorderRadius.circular(20), // Ripple effect matches card shape
         child: Column(
